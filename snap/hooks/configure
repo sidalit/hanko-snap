@@ -1,0 +1,37 @@
+#!/bin/sh
+# Validate `snap set hanko ...` and restart the service if it is enabled or running.
+set -eu
+
+case "$(snapctl get database-url)" in
+  '' | postgres://?* | postgresql://?* | mysql://?* | mariadb://?* | cockroach://?* | cockroachdb://?*) ;;
+  *)
+    echo "database-url must start with postgres://, mysql://, mariadb:// or cockroach://" >&2
+    exit 1
+    ;;
+esac
+
+for key in public-address admin-address; do
+  address="$(snapctl get "$key")"
+  if ! printf '%s\n' "$address" | grep -Eq '^([A-Za-z0-9.-]*|\[[0-9A-Fa-f:.]+\]):[0-9]{1,5}$'; then
+    echo "$key must be host:port, [IPv6]:port or :port" >&2
+    exit 1
+  fi
+  port="${address##*:}"
+  if [ "$port" -lt 1 ] || [ "$port" -gt 65535 ]; then
+    echo "$key port must be between 1 and 65535" >&2
+    exit 1
+  fi
+done
+
+case "$(snapctl get auto-migrate)" in
+  true | false) ;;
+  *)
+    echo "auto-migrate must be true or false" >&2
+    exit 1
+    ;;
+esac
+
+# Also restart an enabled service that is down, so fixing a bad value brings it back.
+if snapctl services "$SNAP_INSTANCE_NAME.daemon" | grep -qwE 'enabled|active'; then
+  snapctl restart "$SNAP_INSTANCE_NAME.daemon"
+fi

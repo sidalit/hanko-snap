@@ -1,0 +1,56 @@
+#!/bin/sh
+# Default settings for the background service (localhost only) and a config
+# file with a freshly generated key for encrypting the token signing keys.
+set -eu
+
+snapctl set public-address=127.0.0.1:8000 admin-address=127.0.0.1:8001 auto-migrate=true
+
+config="$SNAP_COMMON/config.yaml"
+if [ ! -e "$config" ]; then
+  umask 077
+  key="$(od -An -N32 -tx1 /dev/urandom | tr -d ' \n')"
+  cat > "$config" <<CONFIG
+# Hanko configuration, see https://docs.hanko.io/references/config
+# The database-url, public-address and admin-address snap options override
+# database.url and server.*.address. Restart the service after editing:
+#   sudo snap restart hanko.daemon
+
+# Encrypts the JWT signing keys stored in the database. Keep it secret and
+# keep it: the service cannot start without the key used to store them.
+secret_keys:
+  - $key
+
+# Used when the database-url snap option is unset.
+database:
+  dialect: postgres
+  host: localhost
+  port: "5432"
+  database: hanko
+  user: hanko
+  password: hanko
+
+service:
+  name: Hanko Authentication Service
+
+# The domain and origins of the frontend that uses Hanko.
+webauthn:
+  relying_party:
+    id: localhost
+    display_name: Hanko Authentication Service
+    origins:
+      - http://localhost:8888
+cors:
+  allow_origins:
+    - http://localhost:8888
+
+# Passcodes and notifications are sent by email.
+email_delivery:
+  from_address: noreply@example.com
+  from_name: Hanko
+  smtp:
+    host: localhost
+    port: "25"
+    # user: hanko
+    # password: secret
+CONFIG
+fi

@@ -1,0 +1,106 @@
+name: hanko
+base: core26
+version: '3.1.0'
+title: Hanko
+icon: snap/gui/hanko.png
+summary: Passkey-first authentication server, an open-source Auth0 alternative
+description: |
+  Hanko is an authentication and user management server. It provides
+  passkeys, passwords, email passcodes, multi-factor authentication,
+  OAuth and SAML single sign-on, sessions and JWT issuing through a
+  public API, plus an admin API for user management. Pair it with the
+  Hanko Elements web components or your own frontend.
+
+  Hanko stores its data in an external PostgreSQL, MySQL, MariaDB or
+  CockroachDB database; no database is bundled.
+
+  **Examples**
+
+     sudo hanko migrate up
+     sudo hanko serve all
+     sudo hanko user import users.json
+     sudo hanko config show
+     hanko version
+
+  The commands read /var/snap/hanko/common/config.yaml, which holds the
+  generated signing key and is readable by root only. Use --config to
+  pick another file.
+
+  **Background service**
+
+  The service is installed disabled. It applies database migrations and
+  runs the public API on 127.0.0.1:8000 and the admin API on
+  127.0.0.1:8001. Point it at a database and start it:
+
+     sudo snap set hanko database-url='postgres://hanko:secret@db.example.com:5432/hanko?sslmode=require'
+     sudo snap start --enable hanko.daemon
+
+  WebAuthn origins, CORS, SMTP and the other settings are in
+  /var/snap/hanko/common/config.yaml; restart the service after editing:
+
+     sudo snap restart hanko.daemon
+
+  The admin API has no authentication of its own. Keep it on localhost
+  or behind an access-controlled proxy.
+license: AGPL-3.0-only
+grade: stable
+confinement: strict
+website: https://www.hanko.io
+source-code:
+  - https://github.com/teamhanko/hanko
+  - https://github.com/sidalit/hanko-snap
+issues:
+  - https://github.com/teamhanko/hanko/issues
+  - https://github.com/sidalit/hanko-snap/issues
+contact: https://github.com/sidalit/hanko-snap/issues
+
+platforms:
+  amd64:
+  arm64:
+
+apps:
+  hanko:
+    command: bin/hanko-cli
+    completer: share/bash-completion/completions/hanko
+    plugs:
+      - home
+      - network
+      - network-bind
+  daemon:
+    command: bin/hanko-daemon
+    daemon: simple
+    install-mode: disable
+    restart-condition: on-failure
+    restart-delay: 10s
+    plugs:
+      - network
+      - network-bind
+
+parts:
+  hanko:
+    plugin: go
+    source: https://github.com/teamhanko/hanko.git
+    source-tag: backend/v$SNAPCRAFT_PROJECT_VERSION
+    source-subdir: backend
+    build-snaps:
+      - go/1.26/stable
+    build-packages:
+      - git
+    build-environment:
+      - CGO_ENABLED: '0'
+      - GOTOOLCHAIN: local
+    override-build: |
+      cd "$CRAFT_PART_BUILD_WORK"
+      # Embed the version from the backend/vX.Y.Z tag, as upstream's release does.
+      HANKO_VERSION="v$(craftctl get version)" go generate ./build_info
+      # Without --config, every command reads the snap's config file.
+      go build -trimpath -o "$CRAFT_PART_INSTALL/bin/hanko" -ldflags "-s -w \
+        -X github.com/teamhanko/hanko/backend/v3/config.DefaultConfigFilePath=/var/snap/hanko/common/config.yaml" .
+      mkdir -p "$CRAFT_PART_INSTALL/share/bash-completion/completions"
+      "$CRAFT_PART_INSTALL/bin/hanko" completion bash \
+        > "$CRAFT_PART_INSTALL/share/bash-completion/completions/hanko"
+      install -Dm644 ../LICENSE "$CRAFT_PART_INSTALL/share/doc/hanko/LICENSE"
+
+  scripts:
+    plugin: dump
+    source: snap/local

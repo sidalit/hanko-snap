@@ -1,0 +1,11 @@
+#!/bin/sh
+# Apply pending database migrations, then serve the public and admin APIs.
+set -eu
+
+. "$SNAP/bin/hanko-env"
+
+if [ "$(snapctl get auto-migrate)" = true ]; then
+  "$SNAP/bin/hanko" migrate up
+fi
+
+exec "$SNAP/bin/hanko" serve all

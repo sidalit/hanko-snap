@@ -1,0 +1,12 @@
+# Sourced by the hanko wrappers: snap options override config.yaml through
+# the environment variables that Hanko reads on top of its config file.
+
+if url="$(snapctl get database-url 2>/dev/null)" && [ -n "$url" ]; then
+  export DATABASE_URL="$url"
+fi
+if address="$(snapctl get public-address 2>/dev/null)" && [ -n "$address" ]; then
+  export SERVER_PUBLIC_ADDRESS="$address"
+fi
+if address="$(snapctl get admin-address 2>/dev/null)" && [ -n "$address" ]; then
+  export SERVER_ADMIN_ADDRESS="$address"
+fi
