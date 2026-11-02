@@ -23,7 +23,7 @@ description: |
      hanko version
 
   The commands read /var/snap/hanko/common/config.yaml, which holds the
-  generated signing key and is readable by root only. Use --config to
+  generated encryption key and is readable by root only. Use --config to
   pick another file.
 
   **Background service**
@@ -40,8 +40,8 @@ description: |
 
      sudo snap restart hanko.daemon
 
-  The admin API has no authentication of its own. Keep it on localhost
-  or behind an access-controlled proxy.
+  The admin and optional multi-tenant management APIs have no authentication.
+  Keep them on localhost or behind an access-controlled proxy.
 license: AGPL-3.0-only
 grade: stable
 confinement: strict

@@ -52,11 +52,11 @@ sudo snap set hanko public-address=0.0.0.0:8000
 sudo snap get hanko
 ```
 
-Everything else is in `/var/snap/hanko/common/config.yaml`, created at install time with a random `secret_keys` entry and readable by root only. Set the WebAuthn relying party and origins to your frontend's domain, the CORS origins, and SMTP for passcode emails, then run `sudo snap restart hanko.daemon`. See the [configuration reference](https://docs.hanko.io/references/config).
+Everything else is in `/var/snap/hanko/common/config.yaml`, created at install time with a random `secret_keys` entry and readable by root only. Set the WebAuthn relying party and origins to your frontend's domain, the CORS origins, and SMTP for passcode emails, then run `sudo snap restart hanko.daemon`. See the [configuration reference](https://github.com/teamhanko/hanko/wiki/config).
 
 Snap options are readable by every local user. To keep the database password private, leave `database-url` unset and set `database` in the config file instead.
 
-The admin API has no authentication. Keep `admin-address` on localhost or put it behind an access-controlled proxy. Serve the public API over HTTPS through a reverse proxy.
+The admin API and optional multi-tenant management API have no authentication. Keep them on localhost or behind an access-controlled proxy. Management defaults to `127.0.0.1:8002` in `config.yaml`. Serve the public API over HTTPS through a reverse proxy.
 
 ## Limitations
 
@@ -81,4 +81,4 @@ snapcraft pack
 
 ## License
 
-Snap packaging: [MIT](https://github.com/sidalit/hanko-snap/blob/main/LICENSE). Hanko is licensed under [AGPL-3.0](https://github.com/teamhanko/hanko/blob/main/LICENSE).
+Snap packaging: [MIT](https://github.com/sidalit/hanko-snap/blob/main/LICENSE).

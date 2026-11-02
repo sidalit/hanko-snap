@@ -1,5 +1,4 @@
 #!/bin/sh
-# Run hanko with the database and addresses from `snap set hanko ...`.
 set -eu
 
 . "$SNAP/bin/hanko-env"

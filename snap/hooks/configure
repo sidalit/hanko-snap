@@ -1,5 +1,4 @@
 #!/bin/sh
-# Validate `snap set hanko ...` and restart the service if it is enabled or running.
 set -eu
 
 case "$(snapctl get database-url)" in
